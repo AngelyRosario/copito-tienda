@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integración PayPal</title>
+    <link rel="stylesheet" href="style1.css">
+    <!-- Incluir el SDK de PayPal -->
+    <script src="https://www.paypal.com/sdk/js?client-id=AT718Ud15V16BpfWqyrKYSURuVKeZrLTwin4ciqB75RftpFlc65NJSliXqN_vzOE70zteLdP6q3QEW_3&components=buttons&disable-funding=venmo&currency=USD"></script>
+</head>
+<body>
+    <form id="purchase-form">
+        <label for="name">Nombre:</label>
+        <input type="text" id="name" name="name" placeholder="Escriba su nombre" required>
+        <label for="email">Correo Electrónico:</label>
+        <input type="email" id="email" name="email" placeholder="Escriba su email" required>
+        <label for="address">Dirección:</label>
+        <input type="text" id="address" name="address" placeholder="Escriba su direccion" required>
+        <label for="amount">Monto:</label>
+        <p id="datoMostrado"></p>
+        <input id="amount" name="amount" readonly></input>
+        <input id="amount1" name="amount1" style="display: none;"></input>
+        <div id="paypal-button-container"></div>
+        <h1>Compras</h1>
+    </form>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const dato = urlParams.get('dato');
+        const decodedDatoValue = decodeURIComponent(dato);
+        // Mostrar el dato en la página
+        document.getElementById('datoMostrado').textContent = "$" +decodedDatoValue;
+        document.getElementById('amount').value = decodedDatoValue;
+
+
+        function renderPayPalButton() {
+            // Destruir el botón de PayPal previamente renderizado si existe
+            const container = document.getElementById('paypal-button-container');
+            container.innerHTML = '';
+
+            // Obtener el nuevo monto del input
+            const amount = document.getElementById("amount").value;
+
+            // Renderizar el botón de PayPal con el nuevo monto
+            paypal.Buttons({
+                createOrder: function(data, actions) {
+                    return actions.order.create({
+                        purchase_units: [{
+                            amount: {
+                                value: amount
+                            }
+                        }]
+                    });
+                },
+                onApprove: function(data, actions) {
+                    return actions.order.capture().then(function(details) {
+                        alert('Pago realizado con éxito por ' + details.payer.name.given_name);
+                    });
+                },
+                onError: function(err) {
+                    console.error(err);
+                    alert('Hubo un problema con el pago.');
+                }
+            }).render('#paypal-button-container');
+        }
+
+        // Renderizar el botón de PayPal por primera vez
+        renderPayPalButton();
+
+        // Escuchar cambios en el input de monto y volver a renderizar el botón
+        document.getElementById('amount').addEventListener('input', renderPayPalButton);
+    </script>
+</body>
+</html>
